@@ -1,0 +1,52 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IUEAFactory",
+  "sourceName": "contracts/PushGuard.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "getOriginForUEA",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "chainNamespace",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "chainId",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes",
+              "name": "owner",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct UniversalAccountId",
+          "name": "account",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bool",
+          "name": "isUEA",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

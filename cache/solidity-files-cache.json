@@ -1,0 +1,42 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Lagos man\\Music\\pushguard\\contracts\\PushGuard.sol": {
+      "lastModificationDate": 1761151611684,
+      "contentHash": "dce451e46ea24ecf7c7069f56c5da601",
+      "sourceName": "contracts/PushGuard.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "IUEAFactory",
+        "PushGuard"
+      ]
+    }
+  }
+}

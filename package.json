@@ -1,0 +1,27 @@
+{
+  "name": "pushguard",
+  "version": "1.0.0",
+  "description": "Universal Wallet Guardian built on Push Chain",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js"
+  },
+  "keywords": [
+    "push-protocol",
+    "web3",
+    "security",
+    "cross-chain"
+  ],
+  "author": "PushGuard Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "hardhat": "^2.26.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.0",
+    "@pushchain/core": "^1.0.0"
+  }
+}
