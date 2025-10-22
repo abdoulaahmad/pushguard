@@ -152,7 +152,7 @@ Visualize the architecture and user flow of PushGuard with Mermaid.js diagrams.
 
 ### User Flow
 
-```
+```mermaid
 graph TD
     A[User Opens dApp] --> B[Connect Wallet]
     B --> C{Wallet Type?}
@@ -173,7 +173,7 @@ graph TD
 
 ### Smart Contract Architecture
 
-```
+```mermaid
 classDiagram
     class PushGuard {
         +mapping(bytes => bool) guardActive
