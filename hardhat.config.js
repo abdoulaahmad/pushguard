@@ -9,7 +9,7 @@ module.exports = {
     },
     pushchain: {
       url: "https://evm.rpc-testnet-donut-node1.push.org",
-      accounts: ["30e7120cd6cf02f07dd245334c34f76ef9b5b82f5fe3a9fd518647344bd4936f"],
+      accounts: ["private key here"],
       chainId: 42101,
     },
   },
