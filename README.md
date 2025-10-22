@@ -29,7 +29,7 @@ PushGuard leverages Push Chain's unique shared-state architecture:
 
 ### Installation
 
-```bash
+```
 # Clone the repository
 git clone <repository-url>
 cd pushguard
@@ -145,6 +145,66 @@ PushGuard demonstrates proper integration with Push Chain's core features:
 6. Enable protection for Solana
 7. Simulate SPL token approval threat
 8. Receive notification for Solana threat
+
+## 📊 Architecture Diagrams
+
+Visualize the architecture and user flow of PushGuard with Mermaid.js diagrams.
+
+### User Flow
+
+```
+graph TD
+    A[User Opens dApp] --> B[Connect Wallet]
+    B --> C{Wallet Type?}
+    C -->|Push Chain| D[Direct Access]
+    C -->|External Chain| E[Auto-create UEA]
+    E --> F[Access via UEA]
+    D --> G[Enable PushGuard]
+    F --> G
+    G --> H{Toggle Protection}
+    H -->|On| I[Monitor Transactions]
+    H -->|Off| J[No Monitoring]
+    I --> K[Threat Detected]
+    K --> L[Report to Smart Contract]
+    L --> M[Emit ThreatDetected Event]
+    M --> N[Send Push Notification]
+    N --> O[User Receives Alert]
+```
+
+### Smart Contract Architecture
+
+```
+classDiagram
+    class PushGuard {
+        +mapping(bytes => bool) guardActive
+        +toggleGuard(bool enable)
+        +isGuardActive(string chainNamespace, string chainId) bool
+        +reportThreat(string threatType, string details)
+    }
+    
+    class IUEAFactory {
+        <<interface>>
+        +getOriginForUEA(address addr) UniversalAccountId, bool
+    }
+    
+    class UniversalAccountId {
+        +string chainNamespace
+        +string chainId
+        +bytes owner
+    }
+    
+    class Events {
+        <<enumeration>>
+        GuardToggled(bool, address, string, string)
+        ThreatDetected(address, string, string, string, string)
+    }
+    
+    PushGuard --> IUEAFactory : uses
+    PushGuard --> UniversalAccountId : uses
+    PushGuard --> Events : emits
+```
+
+**Note**: These diagrams are rendered using Mermaid.js. If you're viewing this on GitHub, the diagrams should display automatically. If you're using a Markdown viewer that doesn't support Mermaid.js, you may need to install a Mermaid plugin or view the diagrams on [Mermaid Live Editor](https://mermaid.live/).
 
 ## 📚 Documentation & Resources
 
