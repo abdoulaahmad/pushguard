@@ -1,311 +1,271 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import contractAddresses from '@/lib/contract-addresses.json';
-import { usePushChainClient, usePushWalletContext, PushUniversalAccountButton, PushUI } from '@pushchain/ui-kit';
-import { PushAPI } from '@pushprotocol/restapi';
-import { ethers } from 'ethers';
+import { useState, useEffect } from 'react';
+import { PushUniversalAccountButton } from '@pushchain/ui-kit';
+import Link from 'next/link';
 
-// PushGuard contract ABI with only the methods we need
-const PUSH_GUARD_ABI = [
-  "function toggleGuard(bool enable) public",
-  "function isGuardActive(string chainNamespace, string chainId) public view returns (bool)",
-  "function reportThreat(string memory threatType, string memory details) public",
-  "event GuardToggled(bool newStatus, address indexed caller, string chainNamespace, string chainId)",
-  "event ThreatDetected(address indexed caller, string threatType, string details, string chainNamespace, string chainId)"
-];
-
-export default function Dashboard() {
-  const { pushChainClient, error, isInitialized } = usePushChainClient();
-  const { connectionStatus } = usePushWalletContext();
-  const [account, setAccount] = useState<string | null>(null);
-  const [isGuardActive, setIsGuardActive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [chainInfo, setChainInfo] = useState({ namespace: 'push', id: '9000' });
-  const [threats, setThreats] = useState<any[]>([]);
-  const [contract, setContract] = useState<string | null>(null);
-
-  // Detect user's chain when they connect
-  useEffect(() => {
-    if (pushChainClient && isInitialized && connectionStatus === PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED) {
-      // Get the actual account from the client
-      const clientAccount = (pushChainClient as any)?.universal?.account || null;
-      setAccount(clientAccount);
-      
-      // In a real implementation, we would detect the actual chain
-      // For now, we'll use default values for Push Chain testnet
-      setChainInfo({ namespace: 'push', id: '9000' });
-    } else {
-      setAccount(null);
-    }
-  }, [pushChainClient, isInitialized, connectionStatus]);
-
-  // Initialize contract when account is connected
-  useEffect(() => {
-    if (pushChainClient && account) {
-      try {
-        // In a real implementation, we would determine the correct contract address based on chain
-        const contractAddress = contractAddresses.pushchain; // Default to Push Chain deployment
-        console.log('Initializing contract at address:', contractAddress);
-        setContract(contractAddress);
-      } catch (err) {
-        console.error('Error initializing contract:', err);
-      }
-    } else {
-      setContract(null);
-    }
-  }, [pushChainClient, account]);
-
-  // Check guard status when contract is initialized
-  const checkGuardStatus = useCallback(async () => {
-    if (!pushChainClient || !contract) return;
-    
-    try {
-      console.log('Checking guard status for chain:', chainInfo);
-      
-      // Create a contract instance to read from
-      const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org');
-      const contractInstance = new ethers.Contract(contract, PUSH_GUARD_ABI, provider);
-      
-      // Check if guard is active for this chain
-      const isActive = await contractInstance.isGuardActive(chainInfo.namespace, chainInfo.id);
-      console.log('Guard status:', isActive);
-      setIsGuardActive(isActive);
-    } catch (error) {
-      console.error('Error checking guard status:', error);
-    }
-  }, [pushChainClient, contract, chainInfo]);
+export default function LandingPage() {
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    if (contract) {
-      checkGuardStatus();
-    }
-  }, [contract, checkGuardStatus]);
-
-  const toggleGuard = async () => {
-    if (!pushChainClient || !contract) return;
-    
-    setLoading(true);
-    try {
-      console.log('Toggling guard status to:', !isGuardActive);
-      
-      // Encode the function call
-      const abiInterface = new ethers.Interface(PUSH_GUARD_ABI);
-      const data = abiInterface.encodeFunctionData('toggleGuard', [!isGuardActive]) as `0x${string}`;
-      
-      // Send transaction using Push Chain client
-      const tx = await pushChainClient.universal.sendTransaction({
-        to: contract as `0x${string}`,
-        data: data
-      });
-      
-      console.log('Transaction sent:', tx);
-      
-      // Wait for transaction confirmation
-      // In a real implementation, we would wait for the transaction to be mined
-      // For now, we'll just update the UI after a short delay to simulate confirmation
-      setTimeout(() => {
-        setIsGuardActive(!isGuardActive);
-        // Re-check the status from the contract after the transaction
-        setTimeout(() => {
-          checkGuardStatus();
-        }, 2000);
-      }, 1000);
-    } catch (error) {
-      console.error('Error toggling guard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const simulateThreat = async () => {
-    if (!pushChainClient || !contract) return;
-    
-    setLoading(true);
-    try {
-      console.log('Simulating threat detection');
-      
-      // Encode the function call
-      const abiInterface = new ethers.Interface(PUSH_GUARD_ABI);
-      const data = abiInterface.encodeFunctionData('reportThreat', [
-        'High-value approval',
-        'Suspicious contract approved to spend tokens'
-      ]) as `0x${string}`;
-      
-      // Send transaction using Push Chain client
-      const tx = await pushChainClient.universal.sendTransaction({
-        to: contract as `0x${string}`,
-        data: data
-      });
-      
-      console.log('Threat report transaction sent:', tx);
-      
-      // Add to threats list for UI display
-      const newThreat = {
-        type: 'High-value approval',
-        timestamp: new Date(),
-        details: 'Suspicious contract approved to spend tokens'
-      };
-      
-      setThreats(prev => [newThreat, ...prev]);
-      
-      // Send Push notification
-      try {
-        // In a real implementation, we would send an actual Push notification
-        console.log('Sending Push notification about threat');
-        // This would be the real call:
-        /*
-        const signer = pushChainClient.signer;
-        await PushAPI.payloads.sendNotification({
-          signer: signer,
-          channel: `eip155:11155111:${contract}`, // Channel would be the contract address
-          recipients: [`eip155:11155111:${account}`], // Recipient would be the user
-          title: "⚠️ PushGuard Alert",
-          body: "You just approved tokens to a suspicious contract. Review this transaction."
-        });
-        */
-      } catch (notificationError) {
-        console.error('Error sending Push notification:', notificationError);
-      }
-    } catch (error) {
-      console.error('Error simulating threat:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">🛡️ PushGuard</h1>
-          <p className="text-lg text-gray-600 mb-8">Universal Wallet Guardian</p>
-        </div>
-
-        {/* Wallet Connection */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800">Wallet Connection</h2>
-              {account ? (
-                <p className="text-gray-600">Connected: {account.substring(0, 6)}...{account.substring(account.length - 4)}</p>
-              ) : (
-                <p className="text-gray-600">Connect your wallet to get started</p>
-              )}
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--primary-bg)' }}>
+      {/* Header */}
+      <header className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'py-3 bg-opacity-90 backdrop-blur-md' : 'py-5'}`} 
+              style={{ backgroundColor: isScrolled ? 'rgba(16, 24, 40, 0.9)' : '#101828' }}>
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+              <span className="text-2xl font-bold" style={{ color: '#101828' }}>PG</span>
             </div>
-            <div>
-              <PushUniversalAccountButton />
+            <h1 className="text-2xl font-bold text-white">PushGuard</h1>
+          </div>
+          
+          <nav className="hidden md:flex space-x-8">
+            <a href="#features" className="text-white hover:text-cyan-200 transition-colors">Features</a>
+            <a href="#how-it-works" className="text-white hover:text-cyan-200 transition-colors">How It Works</a>
+            <a href="#about" className="text-white hover:text-cyan-200 transition-colors">About</a>
+            <Link href="/simulation" className="text-white hover:text-cyan-200 transition-colors">Simulations</Link>
+          </nav>
+          
+          <div className="flex items-center space-x-4">
+            <PushUniversalAccountButton />
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4">
+        <div className="container mx-auto text-center max-w-4xl">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <span style={{ color: '#101828' }}>Universal Wallet</span> <span className="text-cyan-200">Guardian</span>
+          </h1>
+          <p className="text-xl mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: '#101828' }}>
+            One guard. All chains. Zero compromises. Protect your digital assets across Ethereum, Solana, and Push Chain with cutting-edge security.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/dashboard" className="btn-primary text-lg py-3 px-8">
+              Access Dashboard
+            </Link>
+            <Link href="/simulation" className="btn-secondary text-lg py-3 px-8">
+              View Threat Simulations
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4" style={{ color: '#101828' }}>Powerful Security Features</h2>
+            <p className="text-xl max-w-2xl mx-auto" style={{ color: '#101828' }}>
+              Advanced protection mechanisms designed for the multi-chain future
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="card p-8 text-center" style={{ backgroundColor: 'rgba(16, 24, 40, 0.8)' }}>
+              <div className="w-16 h-16 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Real-time Threat Detection</h3>
+              <p style={{ color: '#101828' }}>
+                Advanced algorithms monitor your transactions 24/7, detecting phishing attempts and malicious activities instantly.
+              </p>
+            </div>
+            
+            {/* Feature 2 */}
+            <div className="card p-8 text-center" style={{ backgroundColor: 'rgba(16, 24, 40, 0.8)' }}>
+              <div className="w-16 h-16 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Instant Push Notifications</h3>
+              <p style={{ color: '#101828' }}>
+                Receive real-time alerts via Push Protocol when suspicious activities are detected, giving you immediate control.
+              </p>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="card p-8 text-center" style={{ backgroundColor: 'rgba(16, 24, 40, 0.8)' }}>
+              <div className="w-16 h-16 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Cross-Chain Protection</h3>
+              <p style={{ color: '#101828' }}>
+                Unified security across Ethereum, Solana, and Push Chain ecosystems with a single, intuitive interface.
+              </p>
             </div>
           </div>
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-              Error: {error.message || 'Failed to connect wallet'}
-            </div>
-          )}
         </div>
+      </section>
 
-        {account && (
-          <>
-            <div className="bg-white shadow rounded-lg p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">Wallet Protection</h2>
-                  <p className="text-gray-600">Protect your wallet across all chains</p>
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-4" style={{ backgroundColor: '#101828' }}>
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">How PushGuard Works</h2>
+            <p className="text-xl text-white max-w-2xl mx-auto">
+              Simple setup, powerful protection for all your digital assets
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                1
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h3>
+              <p className="text-white">
+                Securely connect your wallet with our Universal Execution Account technology for seamless cross-chain protection.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                2
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Activate Protection</h3>
+              <p className="text-white">
+                Enable guard mode with one click to start monitoring all your transactions across supported chains.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-cyan-500 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                3
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Stay Protected</h3>
+              <p className="text-white">
+                Receive instant alerts for suspicious activities and take immediate action to protect your assets.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-20 px-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="lg:w-1/2">
+              <h2 className="text-4xl font-bold mb-6" style={{ color: '#101828' }}>About PushGuard</h2>
+              <p className="text-lg mb-6" style={{ color: '#101828' }}>
+                PushGuard is a revolutionary security solution designed for the multi-chain future of Web3. 
+                Built on the Push Protocol ecosystem, it provides universal wallet protection across all major blockchain networks.
+              </p>
+              <p className="text-lg mb-6" style={{ color: '#101828' }}>
+                Our mission is to make Web3 safer for everyone by providing intuitive, powerful security tools 
+                that protect users without compromising their experience.
+              </p>
+              <div className="flex flex-wrap gap-4 mt-8">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-cyan-500 mr-2"></div>
+                  <span style={{ color: '#101828' }}>Cross-chain compatibility</span>
                 </div>
                 <div className="flex items-center">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                    isGuardActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {isGuardActive ? 'ACTIVE' : 'INACTIVE'}
-                  </span>
+                  <div className="w-3 h-3 rounded-full bg-cyan-500 mr-2"></div>
+                  <span style={{ color: '#101828' }}>Real-time monitoring</span>
                 </div>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Chain</span>
-                  <span className="text-sm text-gray-500">
-                    {chainInfo.namespace}:{chainInfo.id}
-                  </span>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-cyan-500 mr-2"></div>
+                  <span style={{ color: '#101828' }}>Push Protocol integration</span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Universal Execution Account: {account}
-                </div>
-              </div>
-
-              <div className="flex space-x-4">
-                <button
-                  onClick={toggleGuard}
-                  disabled={loading || !pushChainClient || !contract}
-                  className={`flex-1 py-3 px-4 rounded-md font-medium ${
-                    isGuardActive
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-green-500 hover:bg-green-600 text-white'
-                  } ${loading || !pushChainClient || !contract ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {loading ? 'Processing...' : isGuardActive ? 'Disable Guard' : 'Enable Guard'}
-                </button>
-                
-                <button
-                  onClick={simulateThreat}
-                  disabled={loading || !pushChainClient || !contract}
-                  className={`py-3 px-4 rounded-md font-medium bg-yellow-500 hover:bg-yellow-600 text-white ${
-                    loading || !pushChainClient || !contract ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  Simulate Threat
-                </button>
               </div>
             </div>
-
-            {threats.length > 0 && (
-              <div className="bg-white shadow rounded-lg p-6 mb-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Threats Detected</h3>
-                <div className="space-y-3">
-                  {threats.map((threat, index) => (
-                    <div key={index} className="flex items-start p-3 bg-red-50 rounded-md">
-                      <div className="flex-shrink-0">
-                        <span className="text-red-500">⚠️</span>
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-red-800 capitalize">{threat.type}</p>
-                        <p className="text-sm text-red-700">{threat.details}</p>
-                        <p className="text-xs text-red-500 mt-1">
-                          {threat.timestamp.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="lg:w-1/2">
+              <div className="card p-8">
+                <h3 className="text-2xl font-bold text-white mb-4">Why Choose PushGuard?</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <svg className="w-6 h-6 text-cyan-500 mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="text-white">Zero-knowledge architecture for maximum privacy</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-6 h-6 text-cyan-500 mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="text-white">Open-source and community audited</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-6 h-6 text-cyan-500 mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="text-white">No subscription fees - pay only for transactions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="w-6 h-6 text-cyan-500 mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span className="text-white">24/7 monitoring with machine learning detection</span>
+                  </li>
+                </ul>
               </div>
-            )}
-          </>
-        )}
-
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">How It Works</h3>
-          <ul className="space-y-2 text-gray-600">
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">✓</span>
-              <span>Detects phishing attempts and malicious transactions</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">✓</span>
-              <span>Monitors unlimited token approvals across all chains</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">✓</span>
-              <span>Sends real-time alerts via Push Protocol notifications</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">✓</span>
-              <span>Works natively with Ethereum, Solana, and Push Chain</span>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to Secure Your Wallet?</h2>
+          <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: '#101828' }}>
+            Join thousands of users protecting their digital assets with PushGuard today.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/dashboard" className="btn-primary text-lg py-4 px-10">
+              Get Started Now
+            </Link>
+            <Link href="/simulation" className="btn-secondary text-lg py-4 px-10">
+              View Threat Simulations
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-4" style={{ backgroundColor: 'rgba(16, 24, 40, 0.8)' }}>
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2 mb-6 md:mb-0">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                <span className="text-2xl font-bold" style={{ color: '#101828' }}>PG</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white">PushGuard</h3>
+            </div>
+            
+            <div className="flex space-x-6">
+              <a href="#" style={{ color: '#101828' }} className="hover:text-white transition-colors">Twitter</a>
+              <a href="#" style={{ color: '#101828' }} className="hover:text-white transition-colors">GitHub</a>
+              <a href="#" style={{ color: '#101828' }} className="hover:text-white transition-colors">Discord</a>
+              <a href="#" style={{ color: '#101828' }} className="hover:text-white transition-colors">Docs</a>
+            </div>
+          </div>
+          
+          <div className="border-t border-cyan-800 mt-8 pt-8 text-center">
+            <p style={{ color: '#101828' }}>
+              © {new Date().getFullYear()} PushGuard. All rights reserved. Built with ❤️ for the Web3 community.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

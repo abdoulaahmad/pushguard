@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Color scheme as requested */
+  --primary-bg: #00bcd4; /* Cyan background */
+  --header-bg: #101828; /* Updated to #101828 */
+  --accent: #1976d2; /* Secondary blue */
+  --text-light: #ffffff;
+  --text-dark: #212121;
 }
 
 @theme inline {
@@ -20,7 +26,125 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--primary-bg);
+  color: var(--text-dark);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Futuristic card styles */
+.card {
+  background: rgba(16, 24, 40, 0.8); /* Updated to #101828 with transparency */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Futuristic button styles */
+.btn-primary {
+  background: linear-gradient(45deg, var(--header-bg), var(--accent));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(16, 24, 40, 0.3);
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(16, 24, 40, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--header-bg);
+  border: 2px solid var(--header-bg);
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--header-bg);
+  color: white;
+}
+
+/* Custom styles for PushChain wallet button - targeting specific classes */
+.sc-hvigdm.blEcaG,
+.sc-hvigdm.blEcaG * {
+  background: var(--primary-bg) !important;
+  border: 2px solid var(--primary-bg) !important;
+  color: white !important;
+  border-radius: 30px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3) !important;
+  padding: 12px 24px !important;
+}
+
+.sc-hvigdm.blEcaG:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(0, 188, 212, 0.4) !important;
+}
+
+/* More specific targeting for the button container */
+.sc-hvigdm,
+.blEcaG {
+  background: var(--primary-bg) !important;
+  border: 2px solid var(--primary-bg) !important;
+  color: white !important;
+  border-radius: 30px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3) !important;
+}
+
+.sc-hvigdm:hover,
+.blEcaG:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(0, 188, 212, 0.4) !important;
+}
+
+/* Universal selector for PushChain buttons */
+[class*="sc-hvigdm"],
+[class*="blEcaG"] {
+  background: var(--primary-bg) !important;
+  border: 2px solid var(--primary-bg) !important;
+  color: white !important;
+  border-radius: 30px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3) !important;
+}
+
+[class*="sc-hvigdm"]:hover,
+[class*="blEcaG"]:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(0, 188, 212, 0.4) !important;
+}
+
+/* Direct targeting of the button element */
+button[class*="sc-"] {
+  background: var(--primary-bg) !important;
+  border: 2px solid var(--primary-bg) !important;
+  color: white !important;
+  border-radius: 30px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3) !important;
+}
+
+button[class*="sc-"]:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(0, 188, 212, 0.4) !important;
 }

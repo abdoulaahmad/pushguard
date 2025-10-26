@@ -25,7 +25,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const appMetadata = {
     logoUrl: '/logo.png', // You can update this with your actual logo
     title: 'PushGuard',
-    description: 'Universal Wallet Guardian',
+    description: 'Universal Wallet Guardian - One guard. All chains. Zero compromises.',
   };
 
   return (
